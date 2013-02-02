@@ -38,12 +38,13 @@ $(BUILD_DIR)/huge/%_cropped.pdf: $(BUILD_DIR)/huge/ $(LATEX_DIR)/%.tex
 	pdfcrop --clip $(BUILD_DIR)/huge/$*.pdf $(BUILD_DIR)/huge/$*_cropped.pdf
 	rm -f $(HUGE_MARK)
 
-$(BUILD_DIR)/huge/%.pbm: $(BUILD_DIR)/huge/%_cropped.pdf
-	convert $(BUILD_DIR)/huge/$*_cropped.pdf $@
+# pdf2svg doesn't seem to work correctly so convert via ps
+$(BUILD_DIR)/huge/%.ps: $(BUILD_DIR)/huge/%_cropped.pdf
+	pdf2ps $(BUILD_DIR)/huge/$*_cropped.pdf $@
 
-$(IMAGES_DIR)/%.svg: $(BUILD_DIR)/huge/%.pbm
-	potrace -s -o $@ $(BUILD_DIR)/huge/$*.pbm
-
+$(IMAGES_DIR)/%.svg: $(BUILD_DIR)/huge/%.ps
+	pstoedit -f plot-svg -dt -ssp $(BUILD_DIR)/huge/$*.ps $@
+	inkscape --select background --verb EditDelete --verb EditSelectAll --verb FitCanvasToSelection --verb FileSave --verb FileClose $@
 
 $(BUILD_DIR)/%_cropped.pdf: $(BUILD_DIR) $(LATEX_DIR)/%.tex
 	sed 's/\\sicpsize}{\\fontsize{200}{220}/\\sicpsize}{\\fontsize{16}{18}/' < $(LATEX_DIR)/sicpstyle.sty > $(LATEX_DIR)/sicpstyle2.sty
